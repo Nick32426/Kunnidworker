@@ -79,6 +79,12 @@ if (data.length === 0) {
     </div>
   `).join("");
 }
+function removeItem(id) {
+  if (confirm("ต้องการลบรายการนี้ใช่ไหม?")) {
+    deleteTransaction(id);
+    location.reload();
+  }
+}
 </script>
 
 </body>
