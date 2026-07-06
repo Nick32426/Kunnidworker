@@ -22,6 +22,19 @@ function addTransaction(type, amount, category, note, date) {
 
   saveTransactions(data);
 }
+  const data = getTransactions();
+
+  data.push({
+    id: Date.now(),
+    type,
+    amount: Number(amount),
+    category,
+    note,
+    date: date || new Date().toISOString().slice(0, 10)
+  });
+
+  saveTransactions(data);
+}
 
 function deleteTransaction(id) {
   const data = getTransactions().filter(item => item.id !== id);
