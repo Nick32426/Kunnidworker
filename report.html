@@ -9,126 +9,102 @@
 <body>
 
 <header class="header">
-  <div>
-    <h1>📊 รายงานร้าน</h1>
-    <p>ข้าวต้มแห้งคุณนิด | สาขาตลาดต้นสัก</p>
-  </div>
+  <h1>📊 รายงานรายรับรายจ่าย</h1>
 </header>
 
-<section class="dashboard">
-  <div class="card income">
-    <h2>💰 รายรับวันนี้</h2>
-    <h1 id="reportIncome">฿ 0</h1>
+<section class="form-box">
+  <label>เลือกวันที่</label>
+  <input id="filterDate" type="date" onchange="renderReport()">
+
+  <label>เลือกเดือน</label>
+  <input id="filterMonth" type="month" onchange="renderReport()">
+
+  <div class="summary">
+    <p>รายรับ: <b id="sumIncome">฿ 0</b></p>
+    <p>รายจ่าย: <b id="sumExpense">฿ 0</b></p>
+    <p>กำไร / ขาดทุน: <b id="sumProfit">฿ 0</b></p>
   </div>
 
-  <div class="card expense">
-    <h2>💸 รายจ่ายวันนี้</h2>
-    <h1 id="reportExpense">฿ 0</h1>
-  </div>
-
-  <div class="card profit">
-    <h2>📈 กำไรวันนี้</h2>
-    <h1 id="reportProfit">฿ 0</h1>
-  </div>
-
-  <div class="card">
-  <h2>📅 เลือกวันที่ดูรายงาน</h2>
-  <input id="filterDate" type="date">
-  <button onclick="loadSelectedDate()">ดูรายงานวันนี้</button>
-</div>
-  <h2>📅 สรุปเดือนนี้</h2>
-  <p id="monthSummaryText">กำลังโหลด...</p>
-</div>
-
-<div class="card">
-  <h2>รายการล่าสุด</h2>
-  <div id="latestList"></div>
-</div>
+  <button class="secondary" onclick="location.href='index.html'">กลับหน้าแรก</button>
 </section>
 
-<section class="menu">
-  <button onclick="location.href='index.html'">🏠 กลับหน้าแรก</button>
+<section class="table-box">
+  <table>
+    <thead>
+      <tr>
+        <th>วันที่</th>
+        <th>ประเภท</th>
+        <th>หมวด</th>
+        <th>จำนวน</th>
+        <th>หมายเหตุ</th>
+        <th>สลิป</th>
+        <th>ลบ</th>
+      </tr>
+    </thead>
+    <tbody id="reportBody"></tbody>
+  </table>
 </section>
 
 <script src="js/storage.js"></script>
 <script>
-const summary = todaySummary();
-const month = monthSummary();
+document.getElementById("filterDate").value = todayDate();
+document.getElementById("filterMonth").value = getMonth(todayDate());
 
-document.getElementById("monthSummaryText").innerHTML =
-  "รายรับ ฿ " + month.income.toLocaleString() +
-  "<br>รายจ่าย ฿ " + month.expense.toLocaleString() +
-  "<br><b>กำไร ฿ " + month.profit.toLocaleString() + "</b>";
-document.getElementById("reportIncome").innerHTML =
-  "฿ " + summary.income.toLocaleString();
+function renderReport() {
+  const data = getTransactions();
+  const filterDate = document.getElementById("filterDate").value;
+  const filterMonth = document.getElementById("filterMonth").value;
+  const body = document.getElementById("reportBody");
 
-document.getElementById("reportExpense").innerHTML =
-  "฿ " + summary.expense.toLocaleString();
+  body.innerHTML = "";
 
-document.getElementById("reportProfit").innerHTML =
-  "฿ " + summary.profit.toLocaleString();
+  let income = 0;
+  let expense = 0;
 
-const list = document.getElementById("latestList");
-const data = getTransactions().slice().reverse();
+  const filtered = data.filter(item => {
+    if (filterDate) return item.date === filterDate;
+    if (filterMonth) return getMonth(item.date) === filterMonth;
+    return true;
+  });
 
-if (data.length === 0) {
-  list.innerHTML = "<p>ยังไม่มีรายการ</p>";
-} else {
-  list.innerHTML = data.map(item => `
-    <div style="padding:12px 0;border-bottom:1px solid #eee;">
-      <b>${item.type === "income" ? "💰 รายรับ" : "💸 รายจ่าย"}</b><br>
-      ${item.category} : ฿ ${item.amount.toLocaleString()}<br>
-      <small>${item.date} ${item.note || ""}</small><br>
-<button onclick="removeItem(${item.id})">ลบรายการ</button>
-    </div>
-  `).join("");
+  filtered.forEach(item => {
+    if (item.type === "income") income += Number(item.amount);
+    if (item.type === "expense") expense += Number(item.amount);
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${item.date}</td>
+      <td>${item.type === "income" ? "รายรับ" : "รายจ่าย"}</td>
+      <td>${item.category}</td>
+      <td>${formatMoney(item.amount)}</td>
+      <td>${item.note || "-"}</td>
+      <td>
+        ${item.slip ? `<a href="${item.slip}" target="_blank">ดูสลิป</a>` : "-"}
+      </td>
+      <td>
+        <button class="danger" onclick="removeItem(${item.id})">ลบ</button>
+      </td>
+    `;
+
+    body.appendChild(tr);
+  });
+
+  const profit = income - expense;
+
+  document.getElementById("sumIncome").textContent = formatMoney(income);
+  document.getElementById("sumExpense").textContent = formatMoney(expense);
+  document.getElementById("sumProfit").textContent = formatMoney(profit);
 }
+
 function removeItem(id) {
   if (confirm("ต้องการลบรายการนี้ใช่ไหม?")) {
     deleteTransaction(id);
-    location.reload();
-  }
-function loadSelectedDate() {
-  const selectedDate = document.getElementById("filterDate").value;
-
-  if (!selectedDate) {
-    alert("กรุณาเลือกวันที่");
-    return;
-  }
-
-  const result = summaryByFilter(x => x.date === selectedDate);
-
-  document.getElementById("reportIncome").innerHTML =
-    "฿ " + result.income.toLocaleString();
-
-  document.getElementById("reportExpense").innerHTML =
-    "฿ " + result.expense.toLocaleString();
-
-  document.getElementById("reportProfit").innerHTML =
-    "฿ " + result.profit.toLocaleString();
-
-  const list = document.getElementById("latestList");
-  const data = getTransactions()
-    .filter(item => item.date === selectedDate)
-    .slice()
-    .reverse();
-
-  if (data.length === 0) {
-    list.innerHTML = "<p>ไม่มีรายการในวันที่เลือก</p>";
-  } else {
-    list.innerHTML = data.map(item => `
-      <div style="padding:12px 0;border-bottom:1px solid #eee;">
-        <b>${item.type === "income" ? "💰 รายรับ" : "💸 รายจ่าย"}</b><br>
-        ${item.category} : ฿ ${item.amount.toLocaleString()}<br>
-        <small>${item.date} ${item.note || ""}</small><br>
-        <button onclick="removeItem(${item.id})">ลบรายการ</button>
-      </div>
-    `).join("");
+    renderReport();
   }
 }
 
-document.getElementById("filterDate").value = new Date().toISOString().slice(0, 10);
-}
+renderReport();
 </script>
 
 </body>
