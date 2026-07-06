@@ -23,9 +23,23 @@ function addTransaction(type, amount, category, note) {
   saveTransactions(data);
 }
 
+function deleteTransaction(id) {
+  const data = getTransactions().filter(item => item.id !== id);
+  saveTransactions(data);
+}
+
 function todaySummary() {
   const today = new Date().toISOString().slice(0, 10);
-  const data = getTransactions().filter(x => x.date === today);
+  return summaryByFilter(x => x.date === today);
+}
+
+function monthSummary() {
+  const month = new Date().toISOString().slice(0, 7);
+  return summaryByFilter(x => x.date.startsWith(month));
+}
+
+function summaryByFilter(filterFn) {
+  const data = getTransactions().filter(filterFn);
 
   const income = data
     .filter(x => x.type === "income")
