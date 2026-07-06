@@ -32,15 +32,16 @@
   <label>หมายเหตุ</label>
   <input id="note" type="text" placeholder="เช่น ยอดขายหน้าร้าน">
 
-  <button onclick="saveIncome()">บันทึกรายรับ</button>
+  <button id="saveBtn">บันทึกรายรับ</button>
   <button class="secondary" onclick="location.href='index.html'">กลับหน้าแรก</button>
 </section>
 
-<script src="js/storage.js"></script>
-<script>
+<script type="module">
+import { addTransaction, todayDate } from "./js/firebase.js";
+
 document.getElementById("date").value = todayDate();
 
-function saveIncome() {
+document.getElementById("saveBtn").onclick = async () => {
   const date = document.getElementById("date").value;
   const category = document.getElementById("category").value;
   const amount = document.getElementById("amount").value;
@@ -51,18 +52,19 @@ function saveIncome() {
     return;
   }
 
-  addTransaction({
+  await addTransaction({
     type: "income",
     date,
     category,
     amount: Number(amount),
     note,
-    slip: ""
+    slip: "",
+    createdAt: new Date().toISOString()
   });
 
   alert("บันทึกรายรับเรียบร้อย");
   location.href = "index.html";
-}
+};
 </script>
 
 </body>
