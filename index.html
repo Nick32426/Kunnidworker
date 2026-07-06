@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้าวต้มแห้งคุณนิด</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+
+    <meta name="theme-color" content="#F57C00">
+</head>
+
+<body>
+
+<header class="header">
+
+    <img src="assets/logo.png" class="logo">
+
+    <div>
+
+        <h1>ข้าวต้มแห้งคุณนิด</h1>
+
+        <p>Nid Shop Manager v0.1</p>
+
+    </div>
+
+</header>
+
+<section class="dashboard">
+
+    <div class="card income">
+
+        <h2>💰 รายรับวันนี้</h2>
+
+        <h1 id="todayIncome">0</h1>
+
+    </div>
+
+    <div class="card expense">
+
+        <h2>💸 รายจ่ายวันนี้</h2>
+
+        <h1 id="todayExpense">0</h1>
+
+    </div>
+
+    <div class="card profit">
+
+        <h2>📈 กำไรวันนี้</h2>
+
+        <h1 id="todayProfit">0</h1>
+
+    </div>
+
+</section>
+
+<section class="menu">
+
+<button onclick="location.href='income.html'">
+
+➕ เพิ่มรายรับ
+
+</button>
+
+<button onclick="location.href='expense.html'">
+
+💸 เพิ่มรายจ่าย
+
+</button>
+
+<button onclick="location.href='report.html'">
+
+📊 รายงาน
+
+</button>
+
+</section>
+
+<script src="js/app.js"></script>
+
+</body>
+
+</html>
