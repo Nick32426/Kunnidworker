@@ -3,26 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เพิ่มรายจ่าย</title>
+  <title>เพิ่มรายจ่ายจากสลิป</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
 <header class="header">
-  <h1>💸 เพิ่มรายจ่ายจากสลิป</h1>
-  <p>อัปโหลดสลิป แล้วระบบจะอ่านข้อมูลให้อัตโนมัติ</p>
+  <h1>📸 เพิ่มรายจ่ายจากสลิป</h1>
+  <p>อัปโหลดสลิป ระบบจะอ่านยอดเงิน วันที่ และหมวดให้อัตโนมัติ</p>
 </header>
 
 <section class="form-box">
   <label>อัปโหลดสลิป / ใบเสร็จ</label>
-  <input id="slip" type="file" accept="image/*" onchange="readSlipAndFill()">
+  <input id="slip" type="file" accept="image/*">
 
-  <p id="ocrStatus" style="font-weight:bold;color:#8b2f14;"></p>
+  <p id="status" class="status"></p>
 
   <div id="resultBox" style="display:none;">
-    <h2>รายการที่อ่านได้</h2>
-
     <label>วันที่</label>
     <input id="date" type="date">
 
@@ -44,142 +42,53 @@
     <label>หมายเหตุ</label>
     <input id="note" type="text">
 
-    <button onclick="saveExpense()">ยืนยันบันทึกรายจ่าย</button>
+    <button id="saveBtn">ยืนยันบันทึกรายจ่าย</button>
   </div>
 
   <button class="secondary" onclick="location.href='index.html'">กลับหน้าแรก</button>
 </section>
 
-<script src="js/storage.js"></script>
+<script type="module">
+import { addTransaction, todayDate } from "./js/firebase.js";
 
-<script>
-let slipImageBase64 = "";
+let slipBase64 = "";
 
-async function readSlipAndFill() {
+document.getElementById("slip").addEventListener("change", readSlip);
+
+async function readSlip() {
   const file = document.getElementById("slip").files[0];
-  const status = document.getElementById("ocrStatus");
-  const resultBox = document.getElementById("resultBox");
-
   if (!file) return;
 
-  status.textContent = "กำลังอ่านข้อมูลจากสลิป...";
-  resultBox.style.display = "none";
+  document.getElementById("status").textContent = "กำลังอ่านสลิป...";
+  document.getElementById("resultBox").style.display = "none";
 
-  const reader = new FileReader();
+  slipBase64 = await resizeImage(file);
 
-  reader.onload = async function(e) {
-    slipImageBase64 = e.target.result;
+  try {
+    const result = await Tesseract.recognize(file, "tha+eng");
+    const text = result.data.text;
 
-    try {
-      const result = await Tesseract.recognize(file, "tha+eng");
-      const text = result.data.text;
+    console.log(text);
 
-      console.log(text);
+    const amount = detectAmount(text);
+    const date = detectDate(text) || todayDate();
+    const category = detectCategory(text);
+    const shop = detectShop(text);
 
-      const amount = detectAmount(text);
-      const date = detectDate(text) || todayDate();
-      const category = detectCategory(text);
-      const shopName = detectShopName(text);
+    document.getElementById("date").value = date;
+    document.getElementById("amount").value = amount;
+    document.getElementById("category").value = category;
+    document.getElementById("note").value = shop ? "สลิปจาก " + shop : "อ่านจากสลิปอัตโนมัติ";
 
-      document.getElementById("date").value = date;
-      document.getElementById("amount").value = amount || "";
-      document.getElementById("category").value = category;
-      document.getElementById("note").value = shopName ? "สลิปจาก " + shopName : "อ่านจากสลิปอัตโนมัติ";
-
-      resultBox.style.display = "block";
-
-      if (amount) {
-        status.textContent = "อ่านสลิปสำเร็จ ตรวจสอบแล้วกดยืนยันบันทึก";
-      } else {
-        status.textContent = "อ่านสลิปได้บางส่วน กรุณาตรวจยอดเงินก่อนบันทึก";
-      }
-
-    } catch (error) {
-      console.error(error);
-      status.textContent = "อ่านสลิปไม่สำเร็จ กรุณาลองเลือกรูปใหม่";
-    }
-  };
-
-  reader.readAsDataURL(file);
+    document.getElementById("resultBox").style.display = "block";
+    document.getElementById("status").textContent = "อ่านสลิปเสร็จแล้ว ตรวจสอบแล้วกดบันทึก";
+  } catch (e) {
+    console.error(e);
+    document.getElementById("status").textContent = "อ่านสลิปไม่สำเร็จ กรุณาลองรูปใหม่";
+  }
 }
 
-function detectAmount(text) {
-  const matches = text.match(/\d{1,3}(,\d{3})*(\.\d{2})|\d+(\.\d{2})/g);
-  if (!matches) return "";
-
-  const numbers = matches
-    .map(x => Number(x.replace(/,/g, "")))
-    .filter(x => x > 0 && x < 1000000);
-
-  if (numbers.length === 0) return "";
-
-  return Math.max(...numbers);
-}
-
-function detectDate(text) {
-  const match = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-  if (!match) return "";
-
-  let day = match[1].padStart(2, "0");
-  let month = match[2].padStart(2, "0");
-  let year = match[3];
-
-  if (year.length === 2) year = "20" + year;
-  if (Number(year) > 2400) year = String(Number(year) - 543);
-
-  return `${year}-${month}-${day}`;
-}
-
-function detectCategory(text) {
-  const lower = text.toLowerCase();
-
-  if (
-    text.includes("หมู") ||
-    text.includes("ไก่") ||
-    text.includes("ข้าว") ||
-    text.includes("ไข่") ||
-    text.includes("ผัก") ||
-    text.includes("ตลาด") ||
-    lower.includes("makro") ||
-    lower.includes("lotus") ||
-    lower.includes("big c")
-  ) {
-    return "วัตถุดิบ";
-  }
-
-  if (text.includes("ไฟฟ้า") || lower.includes("pea") || lower.includes("mea")) {
-    return "ค่าไฟ";
-  }
-
-  if (text.includes("ประปา") || lower.includes("water")) {
-    return "ค่าน้ำ";
-  }
-
-  if (text.includes("แก๊ส") || lower.includes("gas")) {
-    return "ค่าแก๊ส";
-  }
-
-  if (text.includes("เช่า")) {
-    return "ค่าเช่า";
-  }
-
-  if (text.includes("เงินเดือน") || text.includes("ค่าจ้าง")) {
-    return "ค่าแรง";
-  }
-
-  if (lower.includes("ptt") || lower.includes("bangchak") || text.includes("น้ำมัน")) {
-    return "ค่าเดินทาง";
-  }
-
-  return "อื่น ๆ";
-}
-
-function detectShopName(text) {
-  const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
-  return lines.length > 0 ? lines[0] : "";
-}
-
-function saveExpense() {
+document.getElementById("saveBtn").onclick = async () => {
   const date = document.getElementById("date").value;
   const category = document.getElementById("category").value;
   const amount = document.getElementById("amount").value;
@@ -190,17 +99,95 @@ function saveExpense() {
     return;
   }
 
-  addTransaction({
+  await addTransaction({
     type: "expense",
     date,
     category,
     amount: Number(amount),
     note,
-    slip: slipImageBase64
+    slip: slipBase64,
+    createdAt: new Date().toISOString()
   });
 
   alert("บันทึกรายจ่ายเรียบร้อย");
   location.href = "index.html";
+};
+
+function detectAmount(text) {
+  const matches = text.match(/\d{1,3}(,\d{3})*(\.\d{2})|\d+(\.\d{2})/g);
+  if (!matches) return "";
+
+  const nums = matches
+    .map(x => Number(x.replace(/,/g, "")))
+    .filter(x => x > 0 && x < 1000000);
+
+  return nums.length ? Math.max(...nums) : "";
+}
+
+function detectDate(text) {
+  const match = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (!match) return "";
+
+  let d = match[1].padStart(2, "0");
+  let m = match[2].padStart(2, "0");
+  let y = match[3];
+
+  if (y.length === 2) y = "20" + y;
+  if (Number(y) > 2400) y = String(Number(y) - 543);
+
+  return `${y}-${m}-${d}`;
+}
+
+function detectCategory(text) {
+  const lower = text.toLowerCase();
+
+  if (
+    text.includes("หมู") || text.includes("ไก่") || text.includes("ข้าว") ||
+    text.includes("ไข่") || text.includes("ผัก") || text.includes("ตลาด") ||
+    lower.includes("makro") || lower.includes("lotus") || lower.includes("big c")
+  ) return "วัตถุดิบ";
+
+  if (text.includes("ไฟฟ้า") || lower.includes("pea") || lower.includes("mea")) return "ค่าไฟ";
+  if (text.includes("ประปา") || lower.includes("water")) return "ค่าน้ำ";
+  if (text.includes("แก๊ส") || lower.includes("gas")) return "ค่าแก๊ส";
+  if (text.includes("เช่า")) return "ค่าเช่า";
+  if (text.includes("เงินเดือน") || text.includes("ค่าจ้าง")) return "ค่าแรง";
+  if (lower.includes("ptt") || lower.includes("bangchak") || text.includes("น้ำมัน")) return "ค่าเดินทาง";
+
+  return "อื่น ๆ";
+}
+
+function detectShop(text) {
+  const lines = text.split("\n").map(x => x.trim()).filter(Boolean);
+  return lines[0] || "";
+}
+
+function resizeImage(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxWidth = 800;
+        const scale = Math.min(maxWidth / img.width, 1);
+
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.6));
+      };
+
+      img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 </script>
 
