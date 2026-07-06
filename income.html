@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เพิ่มรายรับ</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <h1>💰 เพิ่มรายรับ</h1>
+    <p>บันทึกรายรับร้านข้าวต้มแห้งคุณนิด</p>
+  </div>
+</header>
+
+<section class="dashboard">
+  <div class="card">
+    <h2>ช่องทางรับเงิน</h2>
+    <select id="category">
+      <option>เงินสด</option>
+      <option>เงินโอน</option>
+      <option>PromptPay</option>
+      <option>Grab</option>
+      <option>LINE MAN</option>
+      <option>อื่น ๆ</option>
+    </select>
+
+    <h2>จำนวนเงิน</h2>
+    <input id="amount" type="number" placeholder="เช่น 8500">
+
+    <h2>หมายเหตุ</h2>
+    <input id="note" type="text" placeholder="เช่น ยอดขายหน้าร้าน">
+
+    <button onclick="saveIncome()">บันทึกรายรับ</button>
+    <button onclick="location.href='index.html'">กลับหน้าแรก</button>
+  </div>
+</section>
+
+<script src="js/storage.js"></script>
+<script>
+function saveIncome() {
+  const amount = document.getElementById("amount").value;
+  const category = document.getElementById("category").value;
+  const note = document.getElementById("note").value;
+
+  if (!amount) {
+    alert("กรุณากรอกจำนวนเงิน");
+    return;
+  }
+
+  addTransaction("income", amount, category, note);
+  alert("บันทึกรายรับเรียบร้อย");
+  location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
