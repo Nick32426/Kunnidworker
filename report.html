@@ -9,20 +9,23 @@
 <body>
 
 <header class="header">
-  <h1>📊 รายงานรายรับรายจ่าย</h1>
+  <h1>📊 รายงาน</h1>
 </header>
 
 <section class="form-box">
   <label>เลือกวันที่</label>
-  <input id="filterDate" type="date" onchange="renderReport()">
+  <input id="filterDate" type="date">
 
   <label>เลือกเดือน</label>
-  <input id="filterMonth" type="month" onchange="renderReport()">
+  <input id="filterMonth" type="month">
+
+  <button id="dailyBtn">ดูรายวัน</button>
+  <button id="monthlyBtn">ดูรายเดือน</button>
 
   <div class="summary">
     <p>รายรับ: <b id="sumIncome">฿ 0</b></p>
     <p>รายจ่าย: <b id="sumExpense">฿ 0</b></p>
-    <p>กำไร / ขาดทุน: <b id="sumProfit">฿ 0</b></p>
+    <p>กำไร/ขาดทุน: <b id="sumProfit">฿ 0</b></p>
   </div>
 
   <button class="secondary" onclick="location.href='index.html'">กลับหน้าแรก</button>
@@ -35,36 +38,54 @@
         <th>วันที่</th>
         <th>ประเภท</th>
         <th>หมวด</th>
-        <th>จำนวน</th>
+        <th>ยอดเงิน</th>
         <th>หมายเหตุ</th>
         <th>สลิป</th>
         <th>ลบ</th>
       </tr>
     </thead>
-    <tbody id="reportBody"></tbody>
+    <tbody id="body"></tbody>
   </table>
 </section>
 
-<script src="js/storage.js"></script>
-<script>
+<script type="module">
+import {
+  getTransactions,
+  deleteTransaction,
+  todayDate,
+  monthNow,
+  money
+} from "./js/firebase.js";
+
+let mode = "day";
+
 document.getElementById("filterDate").value = todayDate();
-document.getElementById("filterMonth").value = getMonth(todayDate());
+document.getElementById("filterMonth").value = monthNow();
 
-function renderReport() {
-  const data = getTransactions();
-  const filterDate = document.getElementById("filterDate").value;
-  const filterMonth = document.getElementById("filterMonth").value;
-  const body = document.getElementById("reportBody");
+document.getElementById("dailyBtn").onclick = () => {
+  mode = "day";
+  render();
+};
 
-  body.innerHTML = "";
+document.getElementById("monthlyBtn").onclick = () => {
+  mode = "month";
+  render();
+};
+
+async function render() {
+  const data = await getTransactions();
+  const tbody = document.getElementById("body");
+  tbody.innerHTML = "";
+
+  const fd = document.getElementById("filterDate").value;
+  const fm = document.getElementById("filterMonth").value;
 
   let income = 0;
   let expense = 0;
 
   const filtered = data.filter(item => {
-    if (filterDate) return item.date === filterDate;
-    if (filterMonth) return getMonth(item.date) === filterMonth;
-    return true;
+    if (mode === "day") return item.date === fd;
+    return item.date && item.date.slice(0, 7) === fm;
   });
 
   filtered.forEach(item => {
@@ -72,39 +93,33 @@ function renderReport() {
     if (item.type === "expense") expense += Number(item.amount);
 
     const tr = document.createElement("tr");
-
     tr.innerHTML = `
       <td>${item.date}</td>
       <td>${item.type === "income" ? "รายรับ" : "รายจ่าย"}</td>
-      <td>${item.category}</td>
-      <td>${formatMoney(item.amount)}</td>
+      <td>${item.category || "-"}</td>
+      <td>${money(item.amount)}</td>
       <td>${item.note || "-"}</td>
-      <td>
-        ${item.slip ? `<a href="${item.slip}" target="_blank">ดูสลิป</a>` : "-"}
-      </td>
-      <td>
-        <button class="danger" onclick="removeItem(${item.id})">ลบ</button>
-      </td>
+      <td>${item.slip ? `<a href="${item.slip}" target="_blank">ดูสลิป</a>` : "-"}</td>
+      <td><button class="danger" data-id="${item.id}">ลบ</button></td>
     `;
-
-    body.appendChild(tr);
+    tbody.appendChild(tr);
   });
 
-  const profit = income - expense;
+  document.getElementById("sumIncome").textContent = money(income);
+  document.getElementById("sumExpense").textContent = money(expense);
+  document.getElementById("sumProfit").textContent = money(income - expense);
 
-  document.getElementById("sumIncome").textContent = formatMoney(income);
-  document.getElementById("sumExpense").textContent = formatMoney(expense);
-  document.getElementById("sumProfit").textContent = formatMoney(profit);
+  document.querySelectorAll(".danger").forEach(btn => {
+    btn.onclick = async () => {
+      if (confirm("ต้องการลบรายการนี้ใช่ไหม?")) {
+        await deleteTransaction(btn.dataset.id);
+        render();
+      }
+    };
+  });
 }
 
-function removeItem(id) {
-  if (confirm("ต้องการลบรายการนี้ใช่ไหม?")) {
-    deleteTransaction(id);
-    renderReport();
-  }
-}
-
-renderReport();
+render();
 </script>
 
 </body>
