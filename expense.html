@@ -52,7 +52,7 @@ function saveExpense() {
   const category = document.getElementById("category").value;
   const note = document.getElementById("note").value;
   const date = document.getElementById("date").value;
-
+  }
   if (!amount) {
     alert("กรุณากรอกจำนวนเงิน");
     return;
@@ -63,6 +63,7 @@ function saveExpense() {
   location.href = "index.html";
 }
   document.getElementById("date").value = new Date().toISOString().slice(0, 10);
+  
 </script>
 
 </body>
