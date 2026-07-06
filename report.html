@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายงาน</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <h1>📊 รายงานร้าน</h1>
+    <p>ข้าวต้มแห้งคุณนิด | สาขาตลาดต้นสัก</p>
+  </div>
+</header>
+
+<section class="dashboard">
+  <div class="card income">
+    <h2>💰 รายรับวันนี้</h2>
+    <h1 id="reportIncome">฿ 0</h1>
+  </div>
+
+  <div class="card expense">
+    <h2>💸 รายจ่ายวันนี้</h2>
+    <h1 id="reportExpense">฿ 0</h1>
+  </div>
+
+  <div class="card profit">
+    <h2>📈 กำไรวันนี้</h2>
+    <h1 id="reportProfit">฿ 0</h1>
+  </div>
+
+  <div class="card">
+    <h2>รายการล่าสุด</h2>
+    <div id="latestList"></div>
+  </div>
+</section>
+
+<section class="menu">
+  <button onclick="location.href='index.html'">🏠 กลับหน้าแรก</button>
+</section>
+
+<script src="js/storage.js"></script>
+<script>
+const summary = todaySummary();
+
+document.getElementById("reportIncome").innerHTML =
+  "฿ " + summary.income.toLocaleString();
+
+document.getElementById("reportExpense").innerHTML =
+  "฿ " + summary.expense.toLocaleString();
+
+document.getElementById("reportProfit").innerHTML =
+  "฿ " + summary.profit.toLocaleString();
+
+const list = document.getElementById("latestList");
+const data = getTransactions().slice().reverse();
+
+if (data.length === 0) {
+  list.innerHTML = "<p>ยังไม่มีรายการ</p>";
+} else {
+  list.innerHTML = data.map(item => `
+    <div style="padding:12px 0;border-bottom:1px solid #eee;">
+      <b>${item.type === "income" ? "💰 รายรับ" : "💸 รายจ่าย"}</b><br>
+      ${item.category} : ฿ ${item.amount.toLocaleString()}<br>
+      <small>${item.date} ${item.note || ""}</small>
+    </div>
+  `).join("");
+}
+</script>
+
+</body>
+</html>
