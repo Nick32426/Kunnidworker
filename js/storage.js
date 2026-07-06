@@ -9,19 +9,7 @@ function saveTransactions(data) {
 }
 
 function addTransaction(type, amount, category, note, date) {
-  const data = getTransactions();
 
-  data.push({
-    id: Date.now(),
-    type,
-    amount: Number(amount),
-    category,
-    note,
-    date: date || new Date().toISOString().slice(0, 10)
-  });
-
-  saveTransactions(data);
-}
   const data = getTransactions();
 
   data.push({
