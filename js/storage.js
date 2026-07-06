@@ -1,26 +1,17 @@
-const STORAGE_KEY = "kunnidworker_transactions";
+const STORAGE_KEY = "kunnid_transactions";
 
 function getTransactions() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 }
 
 function saveTransactions(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-function addTransaction(type, amount, category, note, date) {
-
+function addTransaction(item) {
   const data = getTransactions();
-
-  data.push({
-    id: Date.now(),
-    type,
-    amount: Number(amount),
-    category,
-    note,
-    date: date || new Date().toISOString().slice(0, 10)
-  });
-
+  item.id = Date.now();
+  data.push(item);
   saveTransactions(data);
 }
 
@@ -29,30 +20,14 @@ function deleteTransaction(id) {
   saveTransactions(data);
 }
 
-function todaySummary() {
-  const today = new Date().toISOString().slice(0, 10);
-  return summaryByFilter(x => x.date === today);
+function formatMoney(amount) {
+  return "฿ " + Number(amount).toLocaleString("th-TH");
 }
 
-function monthSummary() {
-  const month = new Date().toISOString().slice(0, 7);
-  return summaryByFilter(x => x.date.startsWith(month));
+function todayDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-function summaryByFilter(filterFn) {
-  const data = getTransactions().filter(filterFn);
-
-  const income = data
-    .filter(x => x.type === "income")
-    .reduce((s, x) => s + x.amount, 0);
-
-  const expense = data
-    .filter(x => x.type === "expense")
-    .reduce((s, x) => s + x.amount, 0);
-
-  return {
-    income,
-    expense,
-    profit: income - expense
-  };
+function getMonth(date) {
+  return date.slice(0, 7);
 }
