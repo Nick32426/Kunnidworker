@@ -1,12 +1,18 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const summary = todaySummary();
+const data = getTransactions();
+const today = todayDate();
 
-  document.getElementById("todayIncome").innerHTML =
-    "฿ " + summary.income.toLocaleString();
+let income = 0;
+let expense = 0;
 
-  document.getElementById("todayExpense").innerHTML =
-    "฿ " + summary.expense.toLocaleString();
-
-  document.getElementById("todayProfit").innerHTML =
-    "฿ " + summary.profit.toLocaleString();
+data.forEach(item => {
+  if (item.date === today) {
+    if (item.type === "income") income += Number(item.amount);
+    if (item.type === "expense") expense += Number(item.amount);
+  }
 });
+
+const profit = income - expense;
+
+document.getElementById("todayIncome").textContent = formatMoney(income);
+document.getElementById("todayExpense").textContent = formatMoney(expense);
+document.getElementById("todayProfit").textContent = formatMoney(profit);
