@@ -1,11 +1,12 @@
-let income = 0;
-let expense = 0;
+document.addEventListener("DOMContentLoaded", () => {
+  const summary = todaySummary();
 
-document.getElementById("todayIncome").innerHTML =
-"฿ " + income.toLocaleString();
+  document.getElementById("todayIncome").innerHTML =
+    "฿ " + summary.income.toLocaleString();
 
-document.getElementById("todayExpense").innerHTML =
-"฿ " + expense.toLocaleString();
+  document.getElementById("todayExpense").innerHTML =
+    "฿ " + summary.expense.toLocaleString();
 
-document.getElementById("todayProfit").innerHTML =
-"฿ " + (income-expense).toLocaleString();
+  document.getElementById("todayProfit").innerHTML =
+    "฿ " + summary.profit.toLocaleString();
+});
