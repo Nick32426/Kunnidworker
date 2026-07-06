@@ -58,10 +58,11 @@ function saveExpense() {
     return;
   }
 
-  addTransaction("expense", amount, category, note);
+  addTransaction("expense", amount, category, note, date);
   alert("บันทึกรายจ่ายเรียบร้อย");
   location.href = "index.html";
 }
+  document.getElementById("date").value = new Date().toISOString().slice(0, 10);
 </script>
 
 </body>
