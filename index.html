@@ -3,39 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kunnid Worker</title>
+  <title>ข้าวต้มแห้งคุณนิด</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header class="header">
-  <div>
-    <h1>🍜 ข้าวต้มแห้งคุณนิด</h1>
-    <p>สาขาตลาดต้นสัก</p>
-  </div>
+  <h1>🍜 ข้าวต้มแห้งคุณนิด</h1>
+  <p>ระบบรายรับ รายจ่าย กำไร ขาดทุน</p>
 </header>
 
 <section class="dashboard">
   <div class="card income">
-    <h2>💰 รายรับวันนี้</h2>
+    <h2>รายรับวันนี้</h2>
     <h1 id="todayIncome">฿ 0</h1>
   </div>
 
   <div class="card expense">
-    <h2>💸 รายจ่ายวันนี้</h2>
+    <h2>รายจ่ายวันนี้</h2>
     <h1 id="todayExpense">฿ 0</h1>
   </div>
 
   <div class="card profit">
-    <h2>📈 กำไรวันนี้</h2>
+    <h2>กำไร / ขาดทุน วันนี้</h2>
     <h1 id="todayProfit">฿ 0</h1>
   </div>
 </section>
 
 <section class="menu">
-    <button onclick="location.href='income.html'">➕ เพิ่มรายรับ</button>
-    <button onclick="location.href='expense.html'">💸 เพิ่มรายจ่าย</button>
-    <button onclick="location.href='report.html'">📊 รายงาน</button>
+  <button onclick="location.href='income.html'">➕ เพิ่มรายรับ</button>
+  <button onclick="location.href='expense.html'">💸 เพิ่มรายจ่าย</button>
+  <button onclick="location.href='report.html'">📊 รายงาน</button>
 </section>
 
 <script src="js/storage.js"></script>
