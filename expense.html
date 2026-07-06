@@ -5,11 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>เพิ่มรายจ่าย</title>
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- OCR อ่านข้อความจากรูปสลิป -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
 <header class="header">
   <h1>💸 เพิ่มรายจ่าย</h1>
+  <p>อัปโหลดสลิป แล้วระบบช่วยอ่านวันที่ ยอดเงิน และหมวดรายจ่าย</p>
 </header>
 
 <section class="form-box">
@@ -32,62 +36,156 @@
   <input id="amount" type="number" placeholder="เช่น 1200">
 
   <label>หมายเหตุ</label>
-  <input id="note" type="text" placeholder="เช่น ซื้อหมู ซื้อข้าว">
+  <input id="note" type="text" placeholder="เช่น ซื้อวัตถุดิบ">
 
   <label>อัปโหลดสลิป / ใบเสร็จ</label>
-  <input id="slip" type="file" accept="image/*">
+  <input id="slip" type="file" accept="image/*" onchange="readSlipAI()">
+
+  <p id="ocrStatus" style="color:#8b2f14;font-weight:bold;"></p>
 
   <button onclick="saveExpense()">บันทึกรายจ่าย</button>
   <button class="secondary" onclick="location.href='index.html'">กลับหน้าแรก</button>
 </section>
 
 <script src="js/storage.js"></script>
+
 <script>
 document.getElementById("date").value = todayDate();
+
+let slipImageBase64 = "";
+
+async function readSlipAI() {
+  const file = document.getElementById("slip").files[0];
+  const status = document.getElementById("ocrStatus");
+
+  if (!file) return;
+
+  status.textContent = "กำลังอ่านข้อมูลจากสลิป กรุณารอสักครู่...";
+
+  const reader = new FileReader();
+
+  reader.onload = async function(e) {
+    slipImageBase64 = e.target.result;
+
+    try {
+      const result = await Tesseract.recognize(file, "tha+eng");
+      const text = result.data.text;
+
+      console.log("ข้อความจากสลิป:", text);
+
+      const amount = detectAmount(text);
+      const date = detectDate(text);
+      const category = detectCategory(text);
+
+      if (amount) document.getElementById("amount").value = amount;
+      if (date) document.getElementById("date").value = date;
+      if (category) document.getElementById("category").value = category;
+
+      document.getElementById("note").value = "อ่านจากสลิปอัตโนมัติ";
+      status.textContent = "อ่านสลิปเรียบร้อย กรุณาตรวจสอบก่อนบันทึก";
+    } catch (error) {
+      console.error(error);
+      status.textContent = "อ่านสลิปไม่สำเร็จ กรุณากรอกข้อมูลเอง";
+    }
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function detectAmount(text) {
+  const matches = text.match(/\d{1,3}(,\d{3})*(\.\d{2})|\d+(\.\d{2})/g);
+
+  if (!matches) return "";
+
+  const numbers = matches
+    .map(x => Number(x.replace(/,/g, "")))
+    .filter(x => x > 0 && x < 1000000);
+
+  if (numbers.length === 0) return "";
+
+  return Math.max(...numbers);
+}
+
+function detectDate(text) {
+  const match = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+
+  if (!match) return "";
+
+  let day = match[1].padStart(2, "0");
+  let month = match[2].padStart(2, "0");
+  let year = match[3];
+
+  if (year.length === 2) year = "20" + year;
+  if (Number(year) > 2400) year = String(Number(year) - 543);
+
+  return `${year}-${month}-${day}`;
+}
+
+function detectCategory(text) {
+  const lower = text.toLowerCase();
+
+  if (
+    text.includes("หมู") ||
+    text.includes("ไก่") ||
+    text.includes("ข้าว") ||
+    text.includes("ไข่") ||
+    text.includes("ผัก") ||
+    text.includes("น้ำมัน") ||
+    text.includes("ซีอิ๊ว") ||
+    text.includes("ตลาด")
+  ) {
+    return "วัตถุดิบ";
+  }
+
+  if (text.includes("ไฟฟ้า") || lower.includes("pea") || lower.includes("electric")) {
+    return "ค่าไฟ";
+  }
+
+  if (text.includes("ประปา") || lower.includes("water")) {
+    return "ค่าน้ำ";
+  }
+
+  if (text.includes("แก๊ส") || lower.includes("gas")) {
+    return "ค่าแก๊ส";
+  }
+
+  if (text.includes("เช่า")) {
+    return "ค่าเช่า";
+  }
+
+  if (text.includes("ค่าจ้าง") || text.includes("เงินเดือน") || text.includes("แรงงาน")) {
+    return "ค่าแรง";
+  }
+
+  if (text.includes("น้ำมันรถ") || text.includes("แท็กซี่") || text.includes("รถ") || lower.includes("grab")) {
+    return "ค่าเดินทาง";
+  }
+
+  return "อื่น ๆ";
+}
 
 function saveExpense() {
   const date = document.getElementById("date").value;
   const category = document.getElementById("category").value;
   const amount = document.getElementById("amount").value;
   const note = document.getElementById("note").value;
-  const slipFile = document.getElementById("slip").files[0];
 
   if (!date || !amount) {
     alert("กรุณากรอกวันที่และจำนวนเงิน");
     return;
   }
 
-  if (slipFile) {
-    const reader = new FileReader();
+  addTransaction({
+    type: "expense",
+    date: date,
+    category: category,
+    amount: Number(amount),
+    note: note,
+    slip: slipImageBase64
+  });
 
-    reader.onload = function(e) {
-      addTransaction({
-        type: "expense",
-        date,
-        category,
-        amount: Number(amount),
-        note,
-        slip: e.target.result
-      });
-
-      alert("บันทึกรายจ่ายเรียบร้อย");
-      location.href = "index.html";
-    };
-
-    reader.readAsDataURL(slipFile);
-  } else {
-    addTransaction({
-      type: "expense",
-      date,
-      category,
-      amount: Number(amount),
-      note,
-      slip: ""
-    });
-
-    alert("บันทึกรายจ่ายเรียบร้อย");
-    location.href = "index.html";
-  }
+  alert("บันทึกรายจ่ายเรียบร้อย");
+  location.href = "index.html";
 }
 </script>
 
