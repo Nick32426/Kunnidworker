@@ -74,7 +74,8 @@ if (data.length === 0) {
     <div style="padding:12px 0;border-bottom:1px solid #eee;">
       <b>${item.type === "income" ? "💰 รายรับ" : "💸 รายจ่าย"}</b><br>
       ${item.category} : ฿ ${item.amount.toLocaleString()}<br>
-      <small>${item.date} ${item.note || ""}</small>
+      <small>${item.date} ${item.note || ""}</small><br>
+<button onclick="removeItem(${item.id})">ลบรายการ</button>
     </div>
   `).join("");
 }
