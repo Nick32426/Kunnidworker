@@ -8,7 +8,7 @@ function saveTransactions(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-function addTransaction(type, amount, category, note) {
+function addTransaction(type, amount, category, note, date) {
   const data = getTransactions();
 
   data.push({
@@ -17,7 +17,7 @@ function addTransaction(type, amount, category, note) {
     amount: Number(amount),
     category,
     note,
-    date: new Date().toISOString().slice(0, 10)
+    date: date || new Date().toISOString().slice(0, 10)
   });
 
   saveTransactions(data);
