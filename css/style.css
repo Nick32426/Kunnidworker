@@ -12,7 +12,7 @@ body {
 .header {
   background: #8b2f14;
   color: white;
-  padding: 20px;
+  padding: 22px;
   text-align: center;
 }
 
@@ -22,16 +22,16 @@ body {
 
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 15px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  padding: 18px;
 }
 
 .card {
   background: white;
+  padding: 18px;
   border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
 }
 
 .income {
@@ -46,24 +46,25 @@ body {
   border-left: 8px solid #2563eb;
 }
 
-.menu {
-  padding: 20px;
+.menu,
+.form-box {
   display: grid;
   gap: 12px;
+  padding: 18px;
+  margin: 18px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
 }
 
 button {
   padding: 14px;
-  border: none;
+  border: 0;
   border-radius: 10px;
   background: #8b2f14;
   color: white;
   font-size: 16px;
   cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
 }
 
 .secondary {
@@ -72,34 +73,30 @@ button:hover {
 
 .danger {
   background: #dc2626;
-  padding: 8px 12px;
+  padding: 8px 10px;
 }
 
-.form-box {
-  background: white;
-  margin: 20px;
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  display: grid;
-  gap: 12px;
-}
-
-input, select {
+input,
+select {
   padding: 12px;
+  font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  font-size: 15px;
+}
+
+.status {
+  color: #8b2f14;
+  font-weight: bold;
 }
 
 .summary {
   background: #f1f1f1;
-  padding: 15px;
+  padding: 14px;
   border-radius: 10px;
 }
 
 .table-box {
-  margin: 20px;
+  margin: 18px;
   overflow-x: auto;
 }
 
@@ -109,10 +106,12 @@ table {
   background: white;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 9px;
   text-align: center;
+  white-space: nowrap;
 }
 
 th {
