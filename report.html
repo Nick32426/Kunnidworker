@@ -88,6 +88,46 @@ function removeItem(id) {
     deleteTransaction(id);
     location.reload();
   }
+function loadSelectedDate() {
+  const selectedDate = document.getElementById("filterDate").value;
+
+  if (!selectedDate) {
+    alert("กรุณาเลือกวันที่");
+    return;
+  }
+
+  const result = summaryByFilter(x => x.date === selectedDate);
+
+  document.getElementById("reportIncome").innerHTML =
+    "฿ " + result.income.toLocaleString();
+
+  document.getElementById("reportExpense").innerHTML =
+    "฿ " + result.expense.toLocaleString();
+
+  document.getElementById("reportProfit").innerHTML =
+    "฿ " + result.profit.toLocaleString();
+
+  const list = document.getElementById("latestList");
+  const data = getTransactions()
+    .filter(item => item.date === selectedDate)
+    .slice()
+    .reverse();
+
+  if (data.length === 0) {
+    list.innerHTML = "<p>ไม่มีรายการในวันที่เลือก</p>";
+  } else {
+    list.innerHTML = data.map(item => `
+      <div style="padding:12px 0;border-bottom:1px solid #eee;">
+        <b>${item.type === "income" ? "💰 รายรับ" : "💸 รายจ่าย"}</b><br>
+        ${item.category} : ฿ ${item.amount.toLocaleString()}<br>
+        <small>${item.date} ${item.note || ""}</small><br>
+        <button onclick="removeItem(${item.id})">ลบรายการ</button>
+      </div>
+    `).join("");
+  }
+}
+
+document.getElementById("filterDate").value = new Date().toISOString().slice(0, 10);
 }
 </script>
 
